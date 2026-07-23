@@ -1,18 +1,24 @@
-// 1. Import the express library we just installed
+// 1. Import the express library we installed
 const express = require('express');
 
-// 2. Create an "app" - this represents our whole server
+// 2. Import our new database connection function
+const connectDB = require('./db');
+
+// 3. Create the app
 const app = express();
 
-// 3. Define a port number - the "address" our server listens on
+// 4. Define the port
 const PORT = 5000;
 
-// 4. Define a route: when someone visits the homepage ("/"), send back a message
+// 5. Connect to MongoDB before starting the server
+connectDB();
+
+// 6. Define a route
 app.get('/', (req, res) => {
   res.send('Hello from the Notes App backend!');
 });
 
-// 5. Start the server - make it actually listen for requests
+// 7. Start the server
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });
