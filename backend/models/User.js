@@ -14,9 +14,10 @@ email: {
     lowercase: true,
     match: [/^\S+@\S+\.\S+$/, 'Please enter a valid email address']
   },
-  password: {
+password: {
     type: String,
-    required: true  // this will store the HASHED password, never plain text
+    required: true,
+    select: false  // hide password hash from query results by default
   }
 }, { timestamps: true }); // automatically adds createdAt and updatedAt fields
 

@@ -46,7 +46,7 @@ router.post('/signup', authLimiter, async (req, res) => {
       password: hashedPassword
     });
 
-    logger.info({ userId: newUser._id, email: newUser.email }, 'New user signed up');
+    logger.info({ userId: newUser._id }, 'New user signed up');
 
     res.status(201).json({
       message: 'User created successfully',
@@ -59,7 +59,7 @@ router.post('/signup', authLimiter, async (req, res) => {
 
   } catch (error) {
     if (error.code === 11000) {
-      logger.warn({ email: req.body.email }, 'Signup attempted with duplicate email');
+      logger.warn({}, 'Signup attempted with duplicate email');
       return res.status(409).json({ message: 'User already exists with this email' });
     }
     logger.error({ err: error }, 'Signup error');
@@ -81,9 +81,9 @@ router.post('/login', authLimiter, async (req, res) => {
 
     const normalizedEmail = email.trim().toLowerCase();
 
-    const user = await User.findOne({ email: normalizedEmail });
+    const user = await User.findOne({ email: normalizedEmail }).select('+password');
     if (!user) {
-      logger.warn({ email: normalizedEmail }, 'Login attempt with unknown email');
+      logger.warn({}, 'Login attempt with unknown email');
       return res.status(400).json({ message: 'Invalid email or password' });
     }
 
@@ -99,7 +99,7 @@ router.post('/login', authLimiter, async (req, res) => {
       { expiresIn: '7d' }
     );
 
-    logger.info({ userId: user._id, email: user.email }, 'User logged in');
+    logger.info({ userId: user._id }, 'User logged in');
 
     res.status(200).json({
       message: 'Login successful',

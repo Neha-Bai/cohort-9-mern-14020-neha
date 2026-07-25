@@ -1,15 +1,14 @@
-// 1. Load environment variables from .env file
 require('dotenv').config();
-
 const mongoose = require('mongoose');
+const logger = require('./logger');
 
 const connectDB = async () => {
   try {
     await mongoose.connect(process.env.MONGO_URI);
-    console.log('MongoDB connected successfully');
+    logger.info('MongoDB connected successfully');
   } catch (error) {
-    console.error('MongoDB connection failed:', error.message);
-    process.exit(1); // Stop the app if we can't connect to the database
+    logger.error({ err: error }, 'MongoDB connection failed');
+    throw error; // let server.js's startServer() handle the exit
   }
 };
 

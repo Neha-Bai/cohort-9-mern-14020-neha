@@ -5,7 +5,7 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "test": "echo \"No tests written yet\" && exit 0"
+"test": "echo \"No tests written yet. See project roadmap for planned Mocha/Chai suite.\" && exit 0" 
   },
   "keywords": [],
   "author": "",
