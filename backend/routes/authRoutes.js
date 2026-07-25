@@ -1,17 +1,24 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const rateLimit = require('express-rate-limit');
 const User = require('../models/User');
 const protect = require('../middleware/authMiddleware');
 
 const router = express.Router();
 
+// Rate limit signup/login to prevent brute-force password guessing
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 10, // limit each IP to 10 requests per window
+  message: { message: 'Too many attempts, please try again later' }
+});
+
 // SIGNUP route
-router.post('/signup', async (req, res) => {
+router.post('/signup', authLimiter, async (req, res) => {
   try {
     const { name, email, password } = req.body;
 
-    // Validate input BEFORE touching the database or bcrypt
     if (!name || typeof name !== 'string' || name.trim().length === 0) {
       return res.status(400).json({ message: 'Name is required' });
     }
@@ -24,24 +31,20 @@ router.post('/signup', async (req, res) => {
 
     const normalizedEmail = email.trim().toLowerCase();
 
-    // 1. Check if user already exists
     const existingUser = await User.findOne({ email: normalizedEmail });
     if (existingUser) {
       return res.status(400).json({ message: 'User already exists with this email' });
     }
 
-    // 2. Hash the password before saving
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    // 3. Create the new user in the database
     const newUser = await User.create({
       name: name.trim(),
       email: normalizedEmail,
       password: hashedPassword
     });
 
-    // 4. Send back a success response (never send the password back!)
     res.status(201).json({
       message: 'User created successfully',
       user: {
@@ -52,7 +55,6 @@ router.post('/signup', async (req, res) => {
     });
 
   } catch (error) {
-    // Handle duplicate-key race condition (two signups at the exact same time)
     if (error.code === 11000) {
       return res.status(409).json({ message: 'User already exists with this email' });
     }
@@ -62,11 +64,10 @@ router.post('/signup', async (req, res) => {
 });
 
 // LOGIN route
-router.post('/login', async (req, res) => {
+router.post('/login', authLimiter, async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // Validate input BEFORE touching the database or bcrypt
     if (!email || typeof email !== 'string' || !/^\S+@\S+\.\S+$/.test(email)) {
       return res.status(400).json({ message: 'A valid email is required' });
     }
@@ -76,19 +77,16 @@ router.post('/login', async (req, res) => {
 
     const normalizedEmail = email.trim().toLowerCase();
 
-    // 1. Find the user by email
     const user = await User.findOne({ email: normalizedEmail });
     if (!user) {
       return res.status(400).json({ message: 'Invalid email or password' });
     }
 
-    // 2. Compare the typed password with the hashed one in the database
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       return res.status(400).json({ message: 'Invalid email or password' });
     }
 
-    // 3. Generate a JWT token
     const token = jwt.sign(
       { id: user._id },
       process.env.JWT_SECRET,

@@ -1,10 +1,10 @@
 const express = require('express');
+const mongoose = require('mongoose');
 const Note = require('../models/Note');
 const protect = require('../middleware/authMiddleware');
 
 const router = express.Router();
 
-// All routes below require a valid JWT token
 router.use(protect);
 
 // CREATE a new note
@@ -44,6 +44,10 @@ router.get('/', async (req, res) => {
 // READ a single note by ID (only if it belongs to this user)
 router.get('/:id', async (req, res) => {
   try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ message: 'Invalid note ID' });
+    }
+
     const note = await Note.findOne({ _id: req.params.id, user: req.userId });
 
     if (!note) {
@@ -60,6 +64,10 @@ router.get('/:id', async (req, res) => {
 // UPDATE a note (only if it belongs to this user)
 router.put('/:id', async (req, res) => {
   try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ message: 'Invalid note ID' });
+    }
+
     const { title, content } = req.body;
 
     if (title !== undefined && (typeof title !== 'string' || title.trim().length === 0)) {
@@ -90,6 +98,10 @@ router.put('/:id', async (req, res) => {
 // DELETE a note (only if it belongs to this user)
 router.delete('/:id', async (req, res) => {
   try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ message: 'Invalid note ID' });
+    }
+
     const deletedNote = await Note.findOneAndDelete({ _id: req.params.id, user: req.userId });
 
     if (!deletedNote) {
