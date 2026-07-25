@@ -52,7 +52,12 @@ router.post('/signup', async (req, res) => {
     });
 
   } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
+    // Handle duplicate-key race condition (two signups at the exact same time)
+    if (error.code === 11000) {
+      return res.status(409).json({ message: 'User already exists with this email' });
+    }
+    console.error('Signup error:', error);
+    res.status(500).json({ message: 'Something went wrong. Please try again.' });
   }
 });
 
@@ -101,7 +106,8 @@ router.post('/login', async (req, res) => {
     });
 
   } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
+    console.error('Login error:', error);
+    res.status(500).json({ message: 'Something went wrong. Please try again.' });
   }
 });
 
