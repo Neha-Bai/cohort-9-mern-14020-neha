@@ -1,10 +1,8 @@
 // 1. Load environment variables from .env file
 require('dotenv').config();
 
-// 2. Import mongoose
 const mongoose = require('mongoose');
 
-// 3. Function to connect to MongoDB
 const connectDB = async () => {
   try {
     await mongoose.connect(process.env.MONGO_URI);
@@ -15,5 +13,4 @@ const connectDB = async () => {
   }
 };
 
-// 4. Export this function so other files (like server.js) can use it
 module.exports = connectDB;

@@ -1,20 +1,23 @@
-
 const express = require('express');
 const connectDB = require('./db');
-const authRoutes = require('./routes/authRoutes');   // NEW
+const authRoutes = require('./routes/authRoutes');
 
 const app = express();
 const PORT = 5000;
 
-connectDB();
-
-app.use(express.json());          // NEW - lets Express understand JSON request bodies
-app.use('/api/auth', authRoutes); // NEW - mounts our auth routes under /api/auth
+app.use(express.json());
+app.use('/api/auth', authRoutes);
 
 app.get('/', (req, res) => {
   res.send('Hello from the Notes App backend!');
 });
 
-app.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
-});
+// Start the server only AFTER MongoDB successfully connects
+const startServer = async () => {
+  await connectDB();
+  app.listen(PORT, () => {
+    console.log(`Server is running on http://localhost:${PORT}`);
+  });
+};
+
+startServer();
