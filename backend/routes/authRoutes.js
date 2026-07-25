@@ -4,6 +4,7 @@ const jwt = require('jsonwebtoken');
 const rateLimit = require('express-rate-limit');
 const User = require('../models/User');
 const protect = require('../middleware/authMiddleware');
+const logger = require('../logger');
 
 const router = express.Router();
 
@@ -45,6 +46,8 @@ router.post('/signup', authLimiter, async (req, res) => {
       password: hashedPassword
     });
 
+    logger.info({ userId: newUser._id, email: newUser.email }, 'New user signed up');
+
     res.status(201).json({
       message: 'User created successfully',
       user: {
@@ -56,9 +59,10 @@ router.post('/signup', authLimiter, async (req, res) => {
 
   } catch (error) {
     if (error.code === 11000) {
+      logger.warn({ email: req.body.email }, 'Signup attempted with duplicate email');
       return res.status(409).json({ message: 'User already exists with this email' });
     }
-    console.error('Signup error:', error);
+    logger.error({ err: error }, 'Signup error');
     res.status(500).json({ message: 'Something went wrong. Please try again.' });
   }
 });
@@ -79,11 +83,13 @@ router.post('/login', authLimiter, async (req, res) => {
 
     const user = await User.findOne({ email: normalizedEmail });
     if (!user) {
+      logger.warn({ email: normalizedEmail }, 'Login attempt with unknown email');
       return res.status(400).json({ message: 'Invalid email or password' });
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
+      logger.warn({ userId: user._id }, 'Login attempt with incorrect password');
       return res.status(400).json({ message: 'Invalid email or password' });
     }
 
@@ -92,6 +98,8 @@ router.post('/login', authLimiter, async (req, res) => {
       process.env.JWT_SECRET,
       { expiresIn: '7d' }
     );
+
+    logger.info({ userId: user._id, email: user.email }, 'User logged in');
 
     res.status(200).json({
       message: 'Login successful',
@@ -104,7 +112,7 @@ router.post('/login', authLimiter, async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Login error:', error);
+    logger.error({ err: error }, 'Login error');
     res.status(500).json({ message: 'Something went wrong. Please try again.' });
   }
 });

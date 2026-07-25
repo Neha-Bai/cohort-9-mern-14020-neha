@@ -2,6 +2,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const Note = require('../models/Note');
 const protect = require('../middleware/authMiddleware');
+const logger = require('../logger');
 
 const router = express.Router();
 
@@ -22,10 +23,12 @@ router.post('/', async (req, res) => {
       content: content || ''
     });
 
+    logger.info({ userId: req.userId, noteId: newNote._id }, 'Note created');
+
     res.status(201).json({ message: 'Note created', note: newNote });
 
   } catch (error) {
-    console.error('Create note error:', error);
+    logger.error({ err: error }, 'Create note error');
     res.status(500).json({ message: 'Something went wrong. Please try again.' });
   }
 });
@@ -36,7 +39,7 @@ router.get('/', async (req, res) => {
     const notes = await Note.find({ user: req.userId }).sort({ updatedAt: -1 });
     res.status(200).json({ notes });
   } catch (error) {
-    console.error('Fetch notes error:', error);
+    logger.error({ err: error }, 'Fetch notes error');
     res.status(500).json({ message: 'Something went wrong. Please try again.' });
   }
 });
@@ -56,7 +59,7 @@ router.get('/:id', async (req, res) => {
 
     res.status(200).json({ note });
   } catch (error) {
-    console.error('Fetch note error:', error);
+    logger.error({ err: error }, 'Fetch note error');
     res.status(500).json({ message: 'Something went wrong. Please try again.' });
   }
 });
@@ -88,9 +91,11 @@ router.put('/:id', async (req, res) => {
       return res.status(404).json({ message: 'Note not found' });
     }
 
+    logger.info({ userId: req.userId, noteId: updatedNote._id }, 'Note updated');
+
     res.status(200).json({ message: 'Note updated', note: updatedNote });
   } catch (error) {
-    console.error('Update note error:', error);
+    logger.error({ err: error }, 'Update note error');
     res.status(500).json({ message: 'Something went wrong. Please try again.' });
   }
 });
@@ -108,9 +113,11 @@ router.delete('/:id', async (req, res) => {
       return res.status(404).json({ message: 'Note not found' });
     }
 
+    logger.info({ userId: req.userId, noteId: req.params.id }, 'Note deleted');
+
     res.status(200).json({ message: 'Note deleted' });
   } catch (error) {
-    console.error('Delete note error:', error);
+    logger.error({ err: error }, 'Delete note error');
     res.status(500).json({ message: 'Something went wrong. Please try again.' });
   }
 });
