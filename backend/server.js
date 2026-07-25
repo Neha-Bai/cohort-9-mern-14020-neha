@@ -1,6 +1,7 @@
 const express = require('express');
 const connectDB = require('./db');
 const authRoutes = require('./routes/authRoutes');
+const notesRoutes = require('./routes/notesRoutes');
 
 // Fail fast if JWT_SECRET is missing - login/protected routes depend on it
 if (!process.env.JWT_SECRET) {
@@ -13,7 +14,7 @@ const PORT = 5000;
 
 app.use(express.json());
 app.use('/api/auth', authRoutes);
-
+app.use('/api/notes', notesRoutes);
 app.get('/', (req, res) => {
   res.send('Hello from the Notes App backend!');
 });
