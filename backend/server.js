@@ -4,6 +4,7 @@ const authRoutes = require('./routes/authRoutes');
 const notesRoutes = require('./routes/notesRoutes');
 const logger = require('./logger');
 const pinoHttp = require('pino-http');
+const { notFound, errorHandler } = require('./middleware/errorHandler');
 
 // Fail fast if JWT_SECRET is missing - login/protected routes depend on it
 if (!process.env.JWT_SECRET) {
@@ -24,6 +25,12 @@ app.use('/api/notes', notesRoutes);
 app.get('/', (req, res) => {
   res.send('Hello from the Notes App backend!');
 });
+
+// Catch all 404s (routes not handled above)
+app.use(notFound);
+
+// Global error handler (catches errors from routes + notFound)
+app.use(errorHandler);
 
 // Start the server only AFTER MongoDB successfully connects
 const startServer = async () => {
