@@ -10,9 +10,10 @@ const router = express.Router();
 
 // Rate limit signup/login to prevent brute-force password guessing
 const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 10, // limit each IP to 10 requests per window
-  message: { message: 'Too many attempts, please try again later' }
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  message: { message: 'Too many attempts, please try again later' },
+  skip: () => process.env.NODE_ENV === 'test'
 });
 
 // SIGNUP route
